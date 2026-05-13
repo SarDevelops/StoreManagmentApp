@@ -16,14 +16,14 @@ class RoleController extends Controller
      */
     public function index()
     {
-         return Inertia::render('roles/Index',[
-              'roles' => Role::select(
-            'id',
-            'name',
-            'guard_name',
-            'created_at'
-        )->latest()->get()
-         ]);
+        return Inertia::render('roles/Index', [
+            'roles' => Role::select(
+                'id',
+                'name',
+                'guard_name',
+                'created_at'
+            )->latest()->get()
+        ]);
     }
 
     /**
@@ -39,11 +39,11 @@ class RoleController extends Controller
      */
     public function store(RoleStoreRequest $request)
     {
-      $role =   Role::create([
-            'name'=>trim($request->name),
-            'guard_name'=>'web'
+        $role = Role::create([
+            'name' => trim($request->name),
+            'guard_name' => 'web'
         ]);
-        return back()->with('success','Role created successfully');
+        return back()->with('success',"{$role->name} role Created successfully.");
     }
 
     /**
@@ -65,13 +65,12 @@ class RoleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(RoleUpdateRequest  $request, Role $role)
+    public function update(RoleUpdateRequest $request, Role $role)
     {
         $role->update([
-            'name'=>trim($request->name)
+            'name' => trim($request->name)
         ]);
-
-        return back()->with('success','Role updated');
+        return back()->with('success',"{$role->name} role updated successfully.");
     }
 
     /**
@@ -79,12 +78,10 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-         if($role->name==='admin'){
+        if ($role->name === 'admin') {
             abort(403);
         }
-
         $role->delete();
-
-        return back()->with('success','Role deleted');
+        return back()->with('success', 'Role deleted');
     }
 }

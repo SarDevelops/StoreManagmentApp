@@ -3,9 +3,8 @@ import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import { XMarkIcon } from '@heroicons/vue/24/outline';
-import DataTable from 'datatables.net-vue3'
-import DataTablesLib from 'datatables.net'
-
+import DataTable from 'datatables.net-vue3';
+import DataTablesLib from 'datatables.net';
 import ConfirmModal from '@/components/ConfirmModal.vue';
 
 type Role = {
@@ -115,46 +114,34 @@ const deleteRole = () => {
 
     <Head title="Permissions" />
     <ConfirmModal :show="confirmOpen" title="Delete Role"
-                        message="Are you sure you want to delete this role? This action cannot be undone."
-                        confirm-text="Yes, Delete" cancel-text="Cancel" @close="confirmOpen = false"
-                        @confirm="deleteRole" />
+        message="Are you sure you want to delete this role? This action cannot be undone." confirm-text="Yes, Delete"
+        cancel-text="Cancel" @close="confirmOpen = false" @confirm="deleteRole" />
     <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <h1>Role Model</h1>
         <div class="flex flex-col items-end">
-
             <button class="w-full md:w-auto group relative inline-block text-sm font-medium text-indigo-600"
                 @click="openCreate">
                 <span
                     class="absolute inset-0 translate-x-0.5 translate-y-0.5 bg-indigo-600 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"></span>
-
                 <span class="relative block border border-current bg-white px-8 py-3"> Add Role </span>
             </button>
         </div>
 
-
         <DataTable :data="roles" :columns="columns" class="display w-full">
             <!-- Action Column (last index = 3) -->
             <template #column-3="{ rowData }">
-
                 <div class="flex gap-2">
-
                     <!-- EDIT -->
                     <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded" @click="editRole(rowData)">
                         Edit
                     </button>
-
                     <!-- DELETE -->
                     <button class="px-3 py-1 text-sm bg-red-600 text-white rounded" @click="askDelete(rowData.id)">
                         Delete
                     </button>
-
-
                 </div>
-
             </template>
         </DataTable>
-
-
         <!-- Slider Add Role -->
         <template>
             <div>
@@ -164,7 +151,6 @@ const deleteRole = () => {
                             enter-to="" leave="ease-in-out duration-500" leave-from="" leave-to="opacity-0">
                             <div class="fixed inset-0 bg-gray-900/50 transition-opacity"></div>
                         </TransitionChild>
-
                         <div class="fixed inset-0 overflow-hidden">
                             <div class="absolute inset-0 overflow-hidden">
                                 <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 sm:pl-16">
@@ -200,7 +186,6 @@ const deleteRole = () => {
                                                         <div class="flex flex-col items-start">
                                                             <label for="name">
                                                                 <span class="text-sm font-semibold"> Name </span>
-
                                                                 <input type="text" id="name" v-model="form.name"
                                                                     class="mt-0.5 w-full border-2 border-black shadow-[4px_4px_0_0] focus:ring-2 focus:ring-yellow-300 sm:text-lg">
                                                             </label>
@@ -208,7 +193,6 @@ const deleteRole = () => {
                                                                 {{ form.errors.name }}
                                                             </div>
                                                             <div class="flex flex-col items-end mt-6">
-
                                                                 <button :disabled="form.processing"
                                                                     class="w-full md:w-auto group relative inline-block text-sm font-medium text-indigo-600">
                                                                     <span
