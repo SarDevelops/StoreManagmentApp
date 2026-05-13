@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Role;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Contracts\Validation\ValidationRule;
 
@@ -30,10 +31,9 @@ class RoleUpdateRequest extends FormRequest
                 'min:2',
                 'max:50',
                 'regex:/^[a-zA-Z0-9\-\s]+$/',
-
-                Rule::unique('roles','name')
-                    ->ignore($this->role)
             ]
         ];
     }
 }
+// Role::unique('roles','name')
+//                     ->ignore($this->role)

@@ -1,15 +1,12 @@
 <script setup lang="ts">
-import { Head, useForm,router } from '@inertiajs/vue3';
-import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
-import { dashboard } from '@/routes';
-import { route } from 'ziggy-js';
+import { Head, useForm, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import { XMarkIcon } from '@heroicons/vue/24/outline';
-
 import DataTable from 'datatables.net-vue3'
 import DataTablesLib from 'datatables.net'
 
+import ConfirmModal from '@/components/ConfirmModal.vue';
 
 type Role = {
     id: number
@@ -37,20 +34,6 @@ defineOptions({
 const form = useForm({
     name: ''
 })
-const createRole = () => {
-
-    form.post('/roles', {
-
-        preserveScroll: true,
-
-        onSuccess: () => {
-            form.reset()
-        }
-
-    })
-}
-
-
 //  -------------- Datatable-----------
 DataTable.use(DataTablesLib)
 
@@ -62,33 +45,85 @@ const columns = [
     { data: null, title: 'Actions', orderable: false, searchable: false }
 ]
 
-//  NOt working -------------------------
+//  Edit -------------------------
+const isEdit = ref(false)
+const selectedRoleId = ref<number | null>(null)
 
-const editRole = (role: any) => {
-    router.visit(`/roles/${role.id}/edit`)
+const openCreate = () => {
+    isEdit.value = false
+    selectedRoleId.value = null
+
+    form.reset() // 🔥 clears old edit data
+
+    open.value = true
 }
 
-// Working -----------
+const editRole = (role: Role) => {
+    isEdit.value = true
+    selectedRoleId.value = role.id
 
-const deleteRole = (id: number) => {
-    if (!confirm('Are you sure?')) return
+    form.name = role.name
 
-    router.delete(`/roles/${id}`, {
-        preserveScroll: true
+    open.value = true
+}
+
+const submit = () => {
+    if (isEdit.value && selectedRoleId.value) {
+
+        form.put(`/roles/${selectedRoleId.value}`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                open.value = false
+                form.reset()
+            }
+        })
+    } else {
+        form.post('/roles', {
+            preserveScroll: true,
+            onSuccess: () => {
+                open.value = false
+                form.reset()
+            }
+        })
+
+    }
+}
+
+// Working Delete -----------
+
+const confirmOpen = ref(false)
+const selectedId = ref<number | null>(null)
+const askDelete = (id: number) => {
+    selectedId.value = id
+    confirmOpen.value = true
+}
+
+const deleteRole = () => {
+    if (!selectedId.value) return
+
+    router.delete(`/roles/${selectedId.value}`, {
+        preserveScroll: true,
+        onSuccess: () => {
+            confirmOpen.value = false
+            selectedId.value = null
+        }
     })
 }
-
 </script>
 
 <template>
 
     <Head title="Permissions" />
+    <ConfirmModal :show="confirmOpen" title="Delete Role"
+                        message="Are you sure you want to delete this role? This action cannot be undone."
+                        confirm-text="Yes, Delete" cancel-text="Cancel" @close="confirmOpen = false"
+                        @confirm="deleteRole" />
     <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
         <h1>Role Model</h1>
         <div class="flex flex-col items-end">
 
             <button class="w-full md:w-auto group relative inline-block text-sm font-medium text-indigo-600"
-                @click="open = true">
+                @click="openCreate">
                 <span
                     class="absolute inset-0 translate-x-0.5 translate-y-0.5 bg-indigo-600 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"></span>
 
@@ -97,165 +132,32 @@ const deleteRole = (id: number) => {
         </div>
 
 
- <DataTable
-            :data="roles"
-            :columns="columns"
-            class="display w-full"
-        >
-           <!-- Action Column (last index = 3) -->
-    <template #column-3="{ rowData }">
+        <DataTable :data="roles" :columns="columns" class="display w-full">
+            <!-- Action Column (last index = 3) -->
+            <template #column-3="{ rowData }">
 
-        <div class="flex gap-2">
+                <div class="flex gap-2">
 
-            <!-- EDIT -->
-            <button
-                class="px-3 py-1 text-sm bg-blue-600 text-white rounded"
-                @click="editRole(rowData)"
-            >
-                Edit
-            </button>
+                    <!-- EDIT -->
+                    <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded" @click="editRole(rowData)">
+                        Edit
+                    </button>
 
-            <!-- DELETE -->
-            <button
-                class="px-3 py-1 text-sm bg-red-600 text-white rounded"
-                @click="deleteRole(rowData.id)"
-            >
-                Delete
-            </button>
+                    <!-- DELETE -->
+                    <button class="px-3 py-1 text-sm bg-red-600 text-white rounded" @click="askDelete(rowData.id)">
+                        Delete
+                    </button>
 
-        </div>
 
-    </template>
+                </div>
+
+            </template>
         </DataTable>
-        <!-- <div class="overflow-x-auto">
-            <table class="min-w-full divide-y-2 divide-gray-200 dark:divide-gray-700">
-                <thead class="ltr:text-left rtl:text-right">
-                    <tr class="*:font-medium *:text-gray-900 dark:*:text-white">
-                        <th class="px-3 py-2 whitespace-nowrap">Name</th>
-                        <th class="px-3 py-2 whitespace-nowrap">DoB</th>
-                        <th class="px-3 py-2 whitespace-nowrap">Role</th>
-                        <th class="px-3 py-2 whitespace-nowrap">Salary</th>
-                    </tr>
-                </thead>
-
-                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                    <tr class="*:text-gray-900 *:first:font-medium dark:*:text-white">
-                        <td class="px-3 py-2 whitespace-nowrap">Nandor the Relentless</td>
-                        <td class="px-3 py-2 whitespace-nowrap">04/06/1262</td>
-                        <td class="px-3 py-2 whitespace-nowrap">Vampire Warrior</td>
-                        <td class="px-3 py-2 whitespace-nowrap">$0</td>
-                    </tr>
-
-                    <tr class="*:text-gray-900 *:first:font-medium dark:*:text-white">
-                        <td class="px-3 py-2 whitespace-nowrap">Laszlo Cravensworth</td>
-                        <td class="px-3 py-2 whitespace-nowrap">19/10/1678</td>
-                        <td class="px-3 py-2 whitespace-nowrap">Vampire Gentleman</td>
-                        <td class="px-3 py-2 whitespace-nowrap">$0</td>
-                    </tr>
-
-                    <tr class="*:text-gray-900 *:first:font-medium dark:*:text-white">
-                        <td class="px-3 py-2 whitespace-nowrap">Nadja</td>
-                        <td class="px-3 py-2 whitespace-nowrap">15/03/1593</td>
-                        <td class="px-3 py-2 whitespace-nowrap">Vampire Seductress</td>
-                        <td class="px-3 py-2 whitespace-nowrap">$0</td>
-                    </tr>
-
-                    <tr class="*:text-gray-900 *:first:font-medium dark:*:text-white">
-                        <td class="px-3 py-2 whitespace-nowrap">Colin Robinson</td>
-                        <td class="px-3 py-2 whitespace-nowrap">01/09/1971</td>
-                        <td class="px-3 py-2 whitespace-nowrap">Energy Vampire</td>
-                        <td class="px-3 py-2 whitespace-nowrap">$53,000</td>
-                    </tr>
-
-                    <tr class="*:text-gray-900 *:first:font-medium dark:*:text-white">
-                        <td class="px-3 py-2 whitespace-nowrap">Guillermo de la Cruz</td>
-                        <td class="px-3 py-2 whitespace-nowrap">18/11/1991</td>
-                        <td class="px-3 py-2 whitespace-nowrap">Familiar/Vampire Hunter</td>
-                        <td class="px-3 py-2 whitespace-nowrap">$0</td>
-                    </tr>
-                </tbody>
-            </table>
-        </div> -->
-
-        <template>
-            <div class="p-6">
-
-                <!-- Header -->
-                <div class="flex justify-between mb-4">
-                    <h1 class="text-xl font-bold">Roles</h1>
-                </div>
-
-                <!-- Table Wrapper (HyperUI style) -->
-                <div class="overflow-x-auto rounded-lg border border-gray-200">
-
-                    <table class="min-w-full divide-y divide-gray-200 bg-white text-sm">
-
-                        <!-- Head -->
-                        <thead class="bg-gray-50">
-                            <tr>
-                                <th class="px-4 py-3 text-left font-medium">ID</th>
-                                <th class="px-4 py-3 text-left font-medium">Name</th>
-                                <th class="px-4 py-3 text-left font-medium">Guard</th>
-                                <th class="px-4 py-3 text-left font-medium">Created</th>
-                                <th class="px-4 py-3 text-right font-medium">Actions</th>
-                            </tr>
-                        </thead>
-                        <!-- Body -->
-                        <tbody class="divide-y divide-gray-100">
-
-                            <tr v-for="role in roles" :key="role.id" class="hover:bg-gray-50">
-
-                                <td class="px-4 py-3 text-gray-500" >
-                                    {{ role.id }}
-                                </td>
-
-                                <td class="px-4 py-3 text-gray-500 font-medium">
-                                    {{ role.name }}
-                                </td>
-
-                                <td class="px-4 py-3 text-gray-500">
-                                    {{ role.guard_name }}
-                                </td>
-
-                                <td class="px-4 py-3 text-gray-500">
-                                    {{ role.created_at }}
-                                </td>
-
-                                <td class="px-4 py-3 text-right space-x-2">
-
-                                    <button class="text-blue-600 hover:underline">
-                                        Edit
-                                    </button>
-
-                                    <button class="text-red-600 hover:underline"
-                                        @click="$inertia.delete(`/roles/${role.id}`)">
-                                        Delete
-                                    </button>
-
-                                </td>
-
-                            </tr>
-                            <tr v-if="roles.length === 0">
-                                <td colspan="5" class="text-center py-6 text-gray-500">
-                                    No roles found
-                                </td>
-                            </tr>
-
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-            </div>
-        </template>
 
 
+        <!-- Slider Add Role -->
         <template>
             <div>
-                <!-- <button
-                    class="rounded-md bg-white/10 px-2.5 py-1.5 text-sm font-semibold text-white inset-ring inset-ring-white/5 hover:bg-white/20"
-                    @click="open = true">Open drawer</button> -->
                 <TransitionRoot as="template" :show="open">
                     <Dialog class="relative z-10" @close="open = false">
                         <TransitionChild as="template" enter="ease-in-out duration-500" enter-from="opacity-0"
@@ -289,10 +191,11 @@ const deleteRole = (id: number) => {
                                             <div
                                                 class="relative flex h-full flex-col overflow-y-auto bg-gray-800 py-6 shadow-xl after:absolute after:inset-y-0 after:left-0 after:w-px after:bg-white/10">
                                                 <div class="px-4 sm:px-6">
-                                                    <DialogTitle class="text-base font-semibold text-white">Create Role
+                                                    <DialogTitle class="text-base font-semibold text-white"> {{ isEdit ?
+                                                        'Edit Role' : 'Create Role' }}
                                                     </DialogTitle>
                                                 </div>
-                                                <form @submit.prevent="createRole">
+                                                <form @submit.prevent="submit">
                                                     <div class="relative mt-6 flex-1 px-4 sm:px-6">
                                                         <div class="flex flex-col items-start">
                                                             <label for="name">
@@ -313,7 +216,8 @@ const deleteRole = (id: number) => {
 
                                                                     <span
                                                                         class="relative block border border-current bg-white px-8 py-3">
-                                                                        Save </span>
+                                                                        {{ isEdit ? 'Update Role' : 'Save Role' }}
+                                                                    </span>
                                                                 </button>
                                                             </div>
                                                         </div>
@@ -329,6 +233,6 @@ const deleteRole = (id: number) => {
                 </TransitionRoot>
             </div>
         </template>
-
+        <!-- END slider Add Role -->
     </div>
 </template>
