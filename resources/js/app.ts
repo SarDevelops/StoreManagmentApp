@@ -5,6 +5,12 @@ import AuthLayout from '@/layouts/AuthLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { initializeFlashToast } from '@/lib/flashToast';
 
+import DataTablesLib from 'datatables.net';
+import DataTable from 'datatables.net-vue3';
+import 'datatables.net-dt/css/dataTables.dataTables.css'
+
+DataTable.use(DataTablesLib);
+
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 createInertiaApp({
@@ -21,6 +27,7 @@ createInertiaApp({
                 return AppLayout;
         }
     },
+
     progress: {
         color: '#4B5563',
     },

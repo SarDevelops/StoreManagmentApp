@@ -4,9 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Role;
 use Inertia\Inertia;
-
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\RoleStoreRequest;
+use App\Http\Requests\RoleUpdateRequest;
 
 class RoleController extends Controller
 {
@@ -15,7 +16,14 @@ class RoleController extends Controller
      */
     public function index()
     {
-         return Inertia::render('roles/Index');
+         return Inertia::render('roles/Index',[
+              'roles' => Role::select(
+            'id',
+            'name',
+            'guard_name',
+            'created_at'
+        )->latest()->get()
+         ]);
     }
 
     /**
@@ -29,9 +37,13 @@ class RoleController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(RoleStoreRequest $request)
     {
-        //
+      $role =   Role::create([
+            'name'=>trim($request->name),
+            'guard_name'=>'web'
+        ]);
+        return back()->with('success','Role created successfully');
     }
 
     /**
@@ -53,9 +65,13 @@ class RoleController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Role $role)
+    public function update(RoleUpdateRequest  $request, Role $role)
     {
-        //
+        $role->update([
+            'name'=>trim($request->name)
+        ]);
+
+        return back()->with('success','Role updated');
     }
 
     /**
@@ -63,6 +79,12 @@ class RoleController extends Controller
      */
     public function destroy(Role $role)
     {
-        //
+         if($role->name==='admin'){
+            abort(403);
+        }
+
+        $role->delete();
+
+        return back()->with('success','Role deleted');
     }
 }

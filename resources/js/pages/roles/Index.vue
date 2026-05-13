@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, useForm,router } from '@inertiajs/vue3';
 import PlaceholderPattern from '@/components/PlaceholderPattern.vue';
 import { dashboard } from '@/routes';
 import { route } from 'ziggy-js';
@@ -7,6 +7,20 @@ import { ref } from 'vue';
 import { Dialog, DialogPanel, DialogTitle, TransitionChild, TransitionRoot } from '@headlessui/vue';
 import { XMarkIcon } from '@heroicons/vue/24/outline';
 
+import DataTable from 'datatables.net-vue3'
+import DataTablesLib from 'datatables.net'
+
+
+type Role = {
+    id: number
+    name: string
+    guard_name: string
+    created_at: string
+}
+
+defineProps<{
+    roles: Role[]
+}>()
 const open = ref(false)
 
 defineOptions({
@@ -19,6 +33,51 @@ defineOptions({
         ],
     },
 });
+// Create Role ---------------------------
+const form = useForm({
+    name: ''
+})
+const createRole = () => {
+
+    form.post('/roles', {
+
+        preserveScroll: true,
+
+        onSuccess: () => {
+            form.reset()
+        }
+
+    })
+}
+
+
+//  -------------- Datatable-----------
+DataTable.use(DataTablesLib)
+
+
+const columns = [
+    { data: 'id', title: 'ID' },
+    { data: 'name', title: 'Role Name' },
+    { data: 'guard_name', title: 'Guard' },
+    { data: null, title: 'Actions', orderable: false, searchable: false }
+]
+
+//  NOt working -------------------------
+
+const editRole = (role: any) => {
+    router.visit(`/roles/${role.id}/edit`)
+}
+
+// Working -----------
+
+const deleteRole = (id: number) => {
+    if (!confirm('Are you sure?')) return
+
+    router.delete(`/roles/${id}`, {
+        preserveScroll: true
+    })
+}
+
 </script>
 
 <template>
@@ -37,7 +96,38 @@ defineOptions({
             </button>
         </div>
 
-        <div class="overflow-x-auto">
+
+ <DataTable
+            :data="roles"
+            :columns="columns"
+            class="display w-full"
+        >
+           <!-- Action Column (last index = 3) -->
+    <template #column-3="{ rowData }">
+
+        <div class="flex gap-2">
+
+            <!-- EDIT -->
+            <button
+                class="px-3 py-1 text-sm bg-blue-600 text-white rounded"
+                @click="editRole(rowData)"
+            >
+                Edit
+            </button>
+
+            <!-- DELETE -->
+            <button
+                class="px-3 py-1 text-sm bg-red-600 text-white rounded"
+                @click="deleteRole(rowData.id)"
+            >
+                Delete
+            </button>
+
+        </div>
+
+    </template>
+        </DataTable>
+        <!-- <div class="overflow-x-auto">
             <table class="min-w-full divide-y-2 divide-gray-200 dark:divide-gray-700">
                 <thead class="ltr:text-left rtl:text-right">
                     <tr class="*:font-medium *:text-gray-900 dark:*:text-white">
@@ -85,7 +175,80 @@ defineOptions({
                     </tr>
                 </tbody>
             </table>
-        </div>
+        </div> -->
+
+        <template>
+            <div class="p-6">
+
+                <!-- Header -->
+                <div class="flex justify-between mb-4">
+                    <h1 class="text-xl font-bold">Roles</h1>
+                </div>
+
+                <!-- Table Wrapper (HyperUI style) -->
+                <div class="overflow-x-auto rounded-lg border border-gray-200">
+
+                    <table class="min-w-full divide-y divide-gray-200 bg-white text-sm">
+
+                        <!-- Head -->
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-4 py-3 text-left font-medium">ID</th>
+                                <th class="px-4 py-3 text-left font-medium">Name</th>
+                                <th class="px-4 py-3 text-left font-medium">Guard</th>
+                                <th class="px-4 py-3 text-left font-medium">Created</th>
+                                <th class="px-4 py-3 text-right font-medium">Actions</th>
+                            </tr>
+                        </thead>
+                        <!-- Body -->
+                        <tbody class="divide-y divide-gray-100">
+
+                            <tr v-for="role in roles" :key="role.id" class="hover:bg-gray-50">
+
+                                <td class="px-4 py-3 text-gray-500" >
+                                    {{ role.id }}
+                                </td>
+
+                                <td class="px-4 py-3 text-gray-500 font-medium">
+                                    {{ role.name }}
+                                </td>
+
+                                <td class="px-4 py-3 text-gray-500">
+                                    {{ role.guard_name }}
+                                </td>
+
+                                <td class="px-4 py-3 text-gray-500">
+                                    {{ role.created_at }}
+                                </td>
+
+                                <td class="px-4 py-3 text-right space-x-2">
+
+                                    <button class="text-blue-600 hover:underline">
+                                        Edit
+                                    </button>
+
+                                    <button class="text-red-600 hover:underline"
+                                        @click="$inertia.delete(`/roles/${role.id}`)">
+                                        Delete
+                                    </button>
+
+                                </td>
+
+                            </tr>
+                            <tr v-if="roles.length === 0">
+                                <td colspan="5" class="text-center py-6 text-gray-500">
+                                    No roles found
+                                </td>
+                            </tr>
+
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+            </div>
+        </template>
 
 
         <template>
@@ -129,28 +292,33 @@ defineOptions({
                                                     <DialogTitle class="text-base font-semibold text-white">Create Role
                                                     </DialogTitle>
                                                 </div>
-                                                <div class="relative mt-6 flex-1 px-4 sm:px-6">
-                                                    <div class="flex flex-col items-start">
-                                                        <label for="Email">
-                                                            <span class="text-sm font-semibold"> Name </span>
+                                                <form @submit.prevent="createRole">
+                                                    <div class="relative mt-6 flex-1 px-4 sm:px-6">
+                                                        <div class="flex flex-col items-start">
+                                                            <label for="name">
+                                                                <span class="text-sm font-semibold"> Name </span>
 
-                                                            <input type="text" id="name"
-                                                                class="mt-0.5 w-full border-2 border-black shadow-[4px_4px_0_0] focus:ring-2 focus:ring-yellow-300 sm:text-lg">
-                                                        </label>
-                                                        <div class="flex flex-col items-end mt-6">
+                                                                <input type="text" id="name" v-model="form.name"
+                                                                    class="mt-0.5 w-full border-2 border-black shadow-[4px_4px_0_0] focus:ring-2 focus:ring-yellow-300 sm:text-lg">
+                                                            </label>
+                                                            <div v-if="form.errors.name" class="text-red-500">
+                                                                {{ form.errors.name }}
+                                                            </div>
+                                                            <div class="flex flex-col items-end mt-6">
 
-                                                            <button
-                                                                class="w-full md:w-auto group relative inline-block text-sm font-medium text-indigo-600">
-                                                                <span
-                                                                    class="absolute inset-0 translate-x-0.5 translate-y-0.5 bg-indigo-600 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"></span>
+                                                                <button :disabled="form.processing"
+                                                                    class="w-full md:w-auto group relative inline-block text-sm font-medium text-indigo-600">
+                                                                    <span
+                                                                        class="absolute inset-0 translate-x-0.5 translate-y-0.5 bg-indigo-600 transition-transform group-hover:translate-x-0 group-hover:translate-y-0"></span>
 
-                                                                <span
-                                                                    class="relative block border border-current bg-white px-8 py-3">
-                                                                    Save </span>
-                                                            </button>
+                                                                    <span
+                                                                        class="relative block border border-current bg-white px-8 py-3">
+                                                                        Save </span>
+                                                                </button>
+                                                            </div>
                                                         </div>
                                                     </div>
-                                                </div>
+                                                </form>
                                             </div>
                                         </DialogPanel>
                                     </TransitionChild>
