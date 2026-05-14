@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import AppLayout from '@/layouts/app/AppSidebarLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import FlashModal from '@/components/FlashModal.vue';
+// import FlashModal from '@/components/FlashModal.vue';
 const { breadcrumbs = [] } = defineProps<{
     breadcrumbs?: BreadcrumbItem[];
 }>();
@@ -9,7 +9,7 @@ const { breadcrumbs = [] } = defineProps<{
 
 <template>
     <AppLayout :breadcrumbs="breadcrumbs">
-        <FlashModal />
+        <!-- <FlashModal /> -->
         <slot />
     </AppLayout>
 </template>

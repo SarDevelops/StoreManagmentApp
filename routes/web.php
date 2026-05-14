@@ -15,7 +15,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('permissions', PermissionController::class);
 
     Route::resource('roles', RoleController::class);
+
+    Route::get(
+        '/roles/{role}/permissions',
+        [RoleController::class, 'permissions']
+    );
+    Route::put(
+        '/roles/{role}/permissions',
+        [RoleController::class, 'syncPermissions']
+    );
 });
-
-
 require __DIR__.'/settings.php';

@@ -6,6 +6,8 @@ use Inertia\Inertia;
 use App\Models\Permission;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PermissionStoreRequest;
+use App\Http\Requests\PermissionUpdateRequest;
 
 class PermissionController extends Controller
 {
@@ -14,7 +16,14 @@ class PermissionController extends Controller
      */
     public function index()
     {
-        return Inertia::render('permissions/Index');
+        return Inertia::render('permissions/Index',[
+            'permissions' => Permission::select(
+                'id',
+                'name',
+                'guard_name',
+                'created_at'
+            )->latest()->get()
+        ]);
     }
 
     /**
@@ -28,9 +37,13 @@ class PermissionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+   public function store(PermissionStoreRequest $request)
     {
-        //
+        $permission = Permission::create([
+            'name' => trim($request->name),
+            'guard_name' => 'web'
+        ]);
+        return back()->with('success',"{$permission->name} permission Created successfully.");
     }
 
     /**
@@ -52,9 +65,12 @@ class PermissionController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Permission $permission)
+    public function update(PermissionUpdateRequest $request, Permission $permission)
     {
-        //
+        $permission->update([
+            'name' => trim($request->name)
+        ]);
+        return back()->with('success',"{$permission->name} permission updated successfully.");
     }
 
     /**
@@ -62,6 +78,10 @@ class PermissionController extends Controller
      */
     public function destroy(Permission $permission)
     {
-        //
+        if ($permission->name === 'admin') {
+            abort(403);
+        }
+        $permission->delete();
+        return back()->with('success', 'Permission deleted');
     }
 }

@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Role;
+// use App\Models\Role;
 use Inertia\Inertia;
+// use App\Models\Permission;
 use Illuminate\Http\Request;
-use App\Http\Controllers\Controller;
+use Spatie\Permission\Models\Role;
+use App\Http\Controllers\Controller ;
 use App\Http\Requests\RoleStoreRequest;
 use App\Http\Requests\RoleUpdateRequest;
+use Spatie\Permission\Models\Permission ;
 
 class RoleController extends Controller
 {
@@ -17,12 +20,8 @@ class RoleController extends Controller
     public function index()
     {
         return Inertia::render('roles/Index', [
-            'roles' => Role::select(
-                'id',
-                'name',
-                'guard_name',
-                'created_at'
-            )->latest()->get()
+            'roles' => Role::select('id', 'name', 'guard_name', 'created_at')->latest()->get(),
+            'permissions' => Permission::select('id', 'name')->latest()->get(),
         ]);
     }
 
@@ -43,7 +42,7 @@ class RoleController extends Controller
             'name' => trim($request->name),
             'guard_name' => 'web'
         ]);
-        return back()->with('success',"{$role->name} role Created successfully.");
+        return back()->with('success', "{$role->name} role Created successfully.");
     }
 
     /**
@@ -70,7 +69,7 @@ class RoleController extends Controller
         $role->update([
             'name' => trim($request->name)
         ]);
-        return back()->with('success',"{$role->name} role updated successfully.");
+        return back()->with('success', "{$role->name} role updated successfully.");
     }
 
     /**
@@ -83,5 +82,58 @@ class RoleController extends Controller
         }
         $role->delete();
         return back()->with('success', 'Role deleted');
+    }
+
+   public function permissions(Role $role)
+{
+    return response()->json([
+
+        'permissions' => Permission::select(
+            'id',
+            'name'
+        )->get(),
+
+        'selected' => $role
+            ->permissions()
+            ->pluck('name')
+            ->toArray(),
+
+    ]);
+}
+
+
+    public function syncPermissions(
+        Request $request,
+        Role $role
+    ) {
+
+        $validated =
+            $request->validate([
+
+                'permissions' => [
+                    'array'
+                ],
+
+                'permissions.*' => [
+                    'exists:permissions,name'
+                ]
+
+            ]);
+
+
+        $role->syncPermissions(
+
+            $validated[
+                'permissions'
+            ] ?? []
+
+        );
+
+
+        return back()->with(
+            'success',
+            'Permissions updated'
+        );
+
     }
 }

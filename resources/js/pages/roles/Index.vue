@@ -6,6 +6,9 @@ import { XMarkIcon } from '@heroicons/vue/24/outline';
 import DataTable from 'datatables.net-vue3';
 import DataTablesLib from 'datatables.net';
 import ConfirmModal from '@/components/ConfirmModal.vue';
+import RolePermissionModal from '@/components/RolePermissionModal.vue'
+import axios from 'axios';
+import Swal from 'sweetalert2'
 
 type Role = {
     id: number
@@ -14,11 +17,17 @@ type Role = {
     created_at: string
 }
 
-defineProps<{
+type Permission = {
+    id: number
+    name: string
+}
+const {
+    roles
+} = defineProps<{
     roles: Role[]
 }>()
-const open = ref(false)
 
+const open = ref(false)
 defineOptions({
     layout: {
         breadcrumbs: [
@@ -29,7 +38,7 @@ defineOptions({
         ],
     },
 });
-// Create Role ---------------------------
+// Create Or Edit Role ---------------------------
 const form = useForm({
     name: ''
 })
@@ -43,8 +52,6 @@ const columns = [
     { data: 'guard_name', title: 'Guard' },
     { data: null, title: 'Actions', orderable: false, searchable: false }
 ]
-
-//  Edit -------------------------
 const isEdit = ref(false)
 const selectedRoleId = ref<number | null>(null)
 
@@ -60,28 +67,49 @@ const openCreate = () => {
 const editRole = (role: Role) => {
     isEdit.value = true
     selectedRoleId.value = role.id
-
     form.name = role.name
-
     open.value = true
 }
-
 const submit = () => {
     if (isEdit.value && selectedRoleId.value) {
 
         form.put(`/roles/${selectedRoleId.value}`, {
             preserveScroll: true,
             onSuccess: () => {
+                console.log('yes');
+
                 open.value = false
                 form.reset()
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Updated!',
+                    text: 'Role updated successfully',
+                    timer: 2000,
+                    showConfirmButton: false
+                })
+
             }
         })
+
     } else {
+
         form.post('/roles', {
             preserveScroll: true,
             onSuccess: () => {
+                console.log('ewewew');
+
                 open.value = false
                 form.reset()
+
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Created!',
+                    text: 'Role created successfully',
+                    timer: 2000,
+                    showConfirmButton: false
+                })
+
             }
         })
 
@@ -108,11 +136,84 @@ const deleteRole = () => {
         }
     })
 }
+
+// ---------------- Assign Module
+const modal =
+    ref(false)
+
+const roleId =
+    ref<number | null>(
+        null
+    )
+const permissions =
+    ref<
+        Permission[]
+    >([])
+const selected =
+    ref<string[]>([])
+
+
+
+const openPermissionModal = async (role: Role) => {
+
+    // show loader only if request is slow
+    const loader = setTimeout(() => {
+
+        Swal.fire({
+            title: 'Loading...',
+            text: 'Fetching permissions',
+            allowOutsideClick: false,
+            didOpen: () => {
+                Swal.showLoading()
+            }
+        })
+
+    }, 500) // wait 0.5 sec
+
+    try {
+
+        const response = await axios.get(
+            `/roles/${role.id}/permissions`
+        )
+
+        // stop loader timer
+        clearTimeout(loader)
+
+        // close loader if visible
+        Swal.close()
+
+        roleId.value = role.id
+
+        permissions.value =
+            response.data.permissions
+
+        selected.value =
+            response.data.selected
+
+        modal.value = true
+
+    } catch (error: any) {
+
+        clearTimeout(loader)
+
+        Swal.close()
+
+        Swal.fire({
+            icon: 'error',
+            title: 'Failed',
+            text:
+                error.response?.data?.message
+                || 'Failed to fetch permissions'
+        })
+
+    }
+}
+
 </script>
 
 <template>
 
-    <Head title="Permissions" />
+    <Head title="Role" />
     <ConfirmModal :show="confirmOpen" title="Delete Role"
         message="Are you sure you want to delete this role? This action cannot be undone." confirm-text="Yes, Delete"
         cancel-text="Cancel" @close="confirmOpen = false" @confirm="deleteRole" />
@@ -131,6 +232,15 @@ const deleteRole = () => {
             <!-- Action Column (last index = 3) -->
             <template #column-3="{ rowData }">
                 <div class="flex gap-2">
+                    <button @click="
+                        openPermissionModal(
+                            rowData
+                        )
+                        " class="rounded bg-green-600 px-3 py-1text-white">
+
+                        Permissions
+
+                    </button>
                     <!-- EDIT -->
                     <button class="px-3 py-1 text-sm bg-blue-600 text-white rounded" @click="editRole(rowData)">
                         Edit
@@ -142,6 +252,15 @@ const deleteRole = () => {
                 </div>
             </template>
         </DataTable>
+        <!--  -->
+        <RolePermissionModal :show="modal" :role-id="roleId" :permissions="permissions
+            " :selected="selected
+                " @close="
+                    modal = false
+                    " />
+
+        <!--  -->
+
         <!-- Slider Add Role -->
         <template>
             <div>
