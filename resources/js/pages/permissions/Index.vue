@@ -23,7 +23,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'permissions',
+                title: 'Permissions',
                 href: '/permissions',
             },
         ],

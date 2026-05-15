@@ -32,7 +32,7 @@ defineOptions({
     layout: {
         breadcrumbs: [
             {
-                title: 'roles',
+                title: 'Roles',
                 href: '/roles',
             },
         ],

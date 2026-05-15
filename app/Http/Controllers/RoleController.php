@@ -4,19 +4,20 @@ namespace App\Http\Controllers;
 
 // use App\Models\Role;
 use Inertia\Inertia;
-// use App\Models\Permission;
+use App\Traits\SecureCrud;
 use Illuminate\Http\Request;
 use Spatie\Permission\Models\Role;
-use App\Http\Controllers\Controller ;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\RoleStoreRequest;
 use App\Http\Requests\RoleUpdateRequest;
-use Spatie\Permission\Models\Permission ;
+use Spatie\Permission\Models\Permission;
 
 class RoleController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
+    use SecureCrud;
     public function index()
     {
         return Inertia::render('roles/Index', [
@@ -38,11 +39,18 @@ class RoleController extends Controller
      */
     public function store(RoleStoreRequest $request)
     {
-        $role = Role::create([
-            'name' => trim($request->name),
-            'guard_name' => 'web'
-        ]);
-        return back()->with('success', "{$role->name} role Created successfully.");
+        $role = $this->secureStore(
+            Role::class,
+            [
+                'name' => trim($request->name),
+                'guard_name' => 'web',
+            ]
+        );
+
+        return back()->with(
+            'success',
+            "{$role->name} role created successfully."
+        );
     }
 
     /**
@@ -84,22 +92,22 @@ class RoleController extends Controller
         return back()->with('success', 'Role deleted');
     }
 
-   public function permissions(Role $role)
-{
-    return response()->json([
+    public function permissions(Role $role)
+    {
+        return response()->json([
 
-        'permissions' => Permission::select(
-            'id',
-            'name'
-        )->get(),
+            'permissions' => Permission::select(
+                'id',
+                'name'
+            )->get(),
 
-        'selected' => $role
-            ->permissions()
-            ->pluck('name')
-            ->toArray(),
+            'selected' => $role
+                ->permissions()
+                ->pluck('name')
+                ->toArray(),
 
-    ]);
-}
+        ]);
+    }
 
 
     public function syncPermissions(
