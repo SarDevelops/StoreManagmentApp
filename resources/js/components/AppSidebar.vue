@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2,  LayoutGrid,User,UserCheck} from 'lucide-vue-next';
+import { Link, usePage } from '@inertiajs/vue3';
+import { BookOpen, FolderGit2, LayoutGrid, User, UserCheck } from 'lucide-vue-next';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -18,11 +18,28 @@ import { dashboard } from '@/routes';
 import type { NavItem } from '@/types';
 import { route } from 'ziggy-js';
 
+import type { PageProps } from '@/types'
+
+const page = usePage<PageProps>()
+const hasPermission = (
+    permission: string
+) => {
+
+    return page.props.auth.permissions.includes(
+        permission
+    )
+}
+
+
 const mainNavItems: NavItem[] = [
     {
         title: 'Dashboard',
         href: dashboard(),
         icon: LayoutGrid,
+
+        show: hasPermission(
+            'dashboard.view'
+        ),
 
     },
     {
@@ -30,11 +47,31 @@ const mainNavItems: NavItem[] = [
         href: '/roles',
         icon: User,
 
+        show: hasPermission(
+            'roles.view'
+        ),
+
+
     },
     {
         title: 'Permission',
         href: '/permissions',
         icon: UserCheck,
+
+        show: hasPermission(
+            'permissions.view'
+        ),
+
+    },
+    {
+        title: 'User',
+        href: '/users',
+        icon: User,
+
+
+        show: hasPermission(
+            'users.view'
+        ),
 
     },
 ];

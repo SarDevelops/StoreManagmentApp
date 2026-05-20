@@ -6,8 +6,8 @@ use Illuminate\Database\Eloquent\Model;
 
 class Log extends Model
 {
-   protected $guarded = [];
-   protected $casts = [
-    'payload' => 'array',
-];
+    protected $guarded = [];
+    protected $casts = [
+        'payload' => 'array',
+    ];
 }

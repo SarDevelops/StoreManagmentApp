@@ -3,6 +3,7 @@
 use Laravel\Fortify\Features;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\RoleController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\PermissionController;
 
 Route::inertia('/', 'Welcome', [
@@ -12,9 +13,13 @@ Route::inertia('/', 'Welcome', [
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::inertia('dashboard', 'Dashboard')->name('dashboard');
 
-    Route::resource('permissions', PermissionController::class);
+    Route::resource('users', UserController::class);
 
     Route::resource('roles', RoleController::class);
+
+
+    Route::resource('permissions', PermissionController::class);
+
 
     Route::get(
         '/roles/{role}/permissions',

@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable,HasRoles,SoftDeletes;
+    use HasFactory, Notifiable, TwoFactorAuthenticatable,HasRoles,SoftDeletes,HasRoles;
 
     /**
      * Get the attributes that should be cast.

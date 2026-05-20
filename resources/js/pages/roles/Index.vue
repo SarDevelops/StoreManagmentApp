@@ -218,7 +218,10 @@ const openPermissionModal = async (role: Role) => {
         message="Are you sure you want to delete this role? This action cannot be undone." confirm-text="Yes, Delete"
         cancel-text="Cancel" @close="confirmOpen = false" @confirm="deleteRole" />
     <div class="flex h-full flex-1 flex-col gap-4 overflow-x-auto rounded-xl p-4">
-        <h1>Role Model</h1>
+         <h1 class="text-2xl font-bold">
+                Role Management
+            </h1>
+
         <div class="flex flex-col items-end">
             <button class="w-full md:w-auto group relative inline-block text-sm font-medium text-indigo-600"
                 @click="openCreate">
